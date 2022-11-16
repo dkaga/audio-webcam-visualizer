@@ -1,5 +1,3 @@
-//#define GLSLIFY 1
-
 attribute vec3 color;
 
 uniform float time;

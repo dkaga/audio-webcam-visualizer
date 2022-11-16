@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import vertexShader from './shader/vertexShader.vert';
-import fragmentShader from './shader/fragmentShader.frag';
+import vertexShader from './shader/vertexShader.glsl';
+import fragmentShader from './shader/fragmentShader.glsl';
 
 let scene: THREE.Scene;
 let renderer: THREE.WebGLRenderer;
@@ -144,29 +144,25 @@ const createParticles = () => {
         "#ff4b78", "#16e36d", "#162cf8", "#2016e3"
     ];
 
-    let count = 0;
     const step = 3;
     for (let y = 0, height = imageData.height; y < height; y += step) {
-			for (let x = 0, width = imageData.width; x < width; x += step) {
-					// let index = (count) * 4 * step;
-					let index = (x + y * width) * 4;
-					particleIndexArray.push(index);
+        for (let x = 0, width = imageData.width; x < width; x += step) {
+            let index = (x + y * width) * 4;
+            particleIndexArray.push(index);
 
-					let gray = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
-					let z = gray < 300 ? gray : 10000;
+            let gray = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
+            let z = gray < 300 ? gray : 10000;
 
-					vertices.push(
-							x - imageData.width / 2,
-							-y + imageData.height / 2,
-							z
-					);
+            vertices.push(
+                    x - imageData.width / 2,
+                    -y + imageData.height / 2,
+                    z
+            );
 
-					const rgbColor = hexToRgb(colorsPerFace[Math.floor(Math.random() * colorsPerFace.length)]);
-					if (!rgbColor) return;
-					colors.push(rgbColor.r, rgbColor.g, rgbColor.b);
-
-					count++;
-			}
+            const rgbColor = hexToRgb(colorsPerFace[Math.floor(Math.random() * colorsPerFace.length)]);
+            if (!rgbColor) return;
+            colors.push(rgbColor.r, rgbColor.g, rgbColor.b);
+        }
 	}
 
     const verticesArray = new Float32Array(vertices);
@@ -224,8 +220,6 @@ const getFrequencyRangeValue = (data: Uint8Array, _frequencyRange: number[]) => 
 
 const draw = (t?: number) => {
     clock.getDelta();
-    const time = clock.elapsedTime;
-
     uniforms.time.value += 0.5;
 
     let r, g, b;
@@ -257,16 +251,18 @@ const draw = (t?: number) => {
             let threshold = 300;
             if (gray < threshold && typeof r != 'undefined' && typeof g != 'undefined' && typeof b != 'undefined') {
                 if (gray < threshold / 3) {
-                    particles.geometry.attributes.position.array[i + 2] = gray * r * 5;
-
+                    (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * g * 5;
+                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * g * 5, gray * g * 5, gray * g * 5, gray * g * 5);
                 } else if (gray < threshold / 2) {
-                    particles.geometry.attributes.position.array[i + 2] = gray * g * 5;
-
+                    (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * g * 5;
+                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * g * 5, gray * g * 5, gray * g * 5, gray * g * 5);
                 } else {
-                    particles.geometry.attributes.position.array[i + 2] = gray * b * 5;
+                    (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * b * 5;
+                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * b * 5, gray * b * 5, gray * b * 5, gray * b * 5);
+
                 }
             } else {
-                particles.geometry.attributes.position.array[i + 2] = 10000;
+                (particles.geometry.attributes.position.array as Array<number>)[i + 2] = 10000;
             }
 
             count++;

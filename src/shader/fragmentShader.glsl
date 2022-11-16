@@ -1,5 +1,3 @@
-//#define GLSLIFY 1
-
 uniform float time;
 
 varying vec4 vMvPosition;
