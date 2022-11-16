@@ -47,7 +47,7 @@ const init = () => {
     document.body.classList.add(classNameForLoading);
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2d40f8);
+    scene.background = new THREE.Color("#26b4d2");
 
     renderer = new THREE.WebGLRenderer();
     document.getElementById("content")?.appendChild(renderer.domElement);
