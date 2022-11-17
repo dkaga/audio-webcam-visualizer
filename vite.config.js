@@ -4,5 +4,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [glsl()],
+  build: {
+    rollupOptions: {
+      external: [
+        "three"
+      ],
+    },
+  },
   base: '/audio-webcam-visualizer/'
 });
