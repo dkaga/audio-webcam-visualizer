@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import vertexShader from './shader/vertexShader.glsl';
-import fragmentShader from './shader/fragmentShader.glsl';
+import * as THREE from "three";
+import vertexShader from "./shader/vertexShader.glsl";
+import fragmentShader from "./shader/fragmentShader.glsl";
 
 let scene: THREE.Scene;
 let renderer: THREE.WebGLRenderer;
@@ -12,29 +12,29 @@ let video: HTMLVideoElement | null;
 let particles: THREE.Points;
 let imageCache: ImageData;
 
-
 const particleIndexArray: number[] = [];
 
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
 
 const classNameForLoading = "loading";
+const randomColorHex = () => "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
 
 let uniforms = {
     time: {
-        type: 'f',
-        value: 0.0
+        type: "f",
+        value: 0.0,
     },
     size: {
-        type: 'f',
-        value: 10.0
-    }
+        type: "f",
+        value: 10.0,
+    },
 };
 
 // audio
 let audio: THREE.Audio;
 let analyser: THREE.AudioAnalyser;
-const fftSize = 2048;  // https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/fftSize
+const fftSize = 2048; // https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/fftSize
 const frequencyRange = {
     bass: [20, 140],
     lowMid: [140, 400],
@@ -47,7 +47,7 @@ const init = () => {
     document.body.classList.add(classNameForLoading);
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color("#26b4d2");
+    scene.background = new THREE.Color(randomColorHex());
 
     renderer = new THREE.WebGLRenderer();
     document.getElementById("content")?.appendChild(renderer.domElement);
@@ -84,31 +84,32 @@ const initVideo = () => {
 
     const option = {
         video: true,
-        audio: true
+        audio: true,
     };
-    navigator.mediaDevices.getUserMedia(option)
+    navigator.mediaDevices
+        .getUserMedia(option)
         .then((stream) => {
             initAudio(stream);
-            stream.removeTrack(stream.getAudioTracks()[0])
-			if (!video) return;
+            stream.removeTrack(stream.getAudioTracks()[0]);
+            if (!video) return;
             video.srcObject = stream;
             video.addEventListener("loadeddata", () => {
                 if (!video) return;
 
                 createParticles();
             });
-    })
-    .catch((error) => {
-        console.log(error);
-        showAlert();
-    });
+        })
+        .catch((error) => {
+            console.log(error);
+            showAlert();
+        });
 };
 
 const initAudio = (stream: MediaStream) => {
     const audioListener = new THREE.AudioListener();
     audio = new THREE.Audio(audioListener);
     audio.setMediaStreamSource(stream);
-    
+
     audio.gain.disconnect();
     analyser = new THREE.AudioAnalyser(audio, fftSize);
 };
@@ -116,17 +117,17 @@ const initAudio = (stream: MediaStream) => {
 // from https://stackoverflow.com/a/5624139
 const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-		if (!result) return;
+    if (!result) return;
     return {
         r: parseInt(result[1], 16) / 255,
         g: parseInt(result[2], 16) / 255,
-        b: parseInt(result[3], 16) / 255
+        b: parseInt(result[3], 16) / 255,
     };
 };
 
 const createParticles = () => {
     const imageData = getImageData(video);
-		if (!imageData) return;
+    if (!imageData) return;
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.ShaderMaterial({
         uniforms: uniforms,
@@ -134,15 +135,13 @@ const createParticles = () => {
         fragmentShader: fragmentShader,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
     });
 
     const vertices: number[] = [];
     const colors: number[] = [];
 
-    let colorsPerFace = [
-        "#ff4b78", "#16e36d", "#162cf8", "#2016e3"
-    ];
+    let colorsPerFace = Array.from(Array(Math.round(Math.random() * 10))).map(() => randomColorHex());
 
     const step = 3;
     for (let y = 0, height = imageData.height; y < height; y += step) {
@@ -153,23 +152,19 @@ const createParticles = () => {
             let gray = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
             let z = gray < 300 ? gray : 10000;
 
-            vertices.push(
-                    x - imageData.width / 2,
-                    -y + imageData.height / 2,
-                    z
-            );
+            vertices.push(x - imageData.width / 2, -y + imageData.height / 2, z);
 
             const rgbColor = hexToRgb(colorsPerFace[Math.floor(Math.random() * colorsPerFace.length)]);
             if (!rgbColor) return;
             colors.push(rgbColor.r, rgbColor.g, rgbColor.b);
         }
-	}
+    }
 
     const verticesArray = new Float32Array(vertices);
-    geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
+    geometry.setAttribute("position", new THREE.BufferAttribute(verticesArray, 3));
 
     const colorsArray = new Float32Array(colors);
-    geometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colorsArray, 3));
 
     particles = new THREE.Points(geometry, material);
     scene.add(particles);
@@ -180,7 +175,7 @@ const getImageData = (image: HTMLVideoElement | null, useCache = false) => {
         return imageCache;
     }
 
-		if (!image || !ctx) return;
+    if (!image || !ctx) return;
 
     const w = image.videoWidth;
     const h = image.videoHeight;
@@ -206,8 +201,8 @@ const getImageData = (image: HTMLVideoElement | null, useCache = false) => {
  */
 const getFrequencyRangeValue = (data: Uint8Array, _frequencyRange: number[]) => {
     const nyquist = 48000 / 2;
-    const lowIndex = Math.round(_frequencyRange[0] / nyquist * data.length);
-    const highIndex = Math.round(_frequencyRange[1] / nyquist * data.length);
+    const lowIndex = Math.round((_frequencyRange[0] / nyquist) * data.length);
+    const highIndex = Math.round((_frequencyRange[1] / nyquist) * data.length);
     let total = 0;
     let numFrequencies = 0;
 
@@ -240,26 +235,26 @@ const draw = (t?: number) => {
 
     // video
     if (particles && t) {
-        const useCache = t % 2 === 0;  // To reduce CPU usage.
+        const useCache = t % 2 === 0; // To reduce CPU usage.
         const imageData = getImageData(video, useCache);
-				if (!imageData) return;
+        if (!imageData) return;
         let count = 0;
 
         for (let i = 0, length = particles.geometry.attributes.position.array.length; i < length; i += 3) {
             let index = particleIndexArray[count];
             let gray = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
             let threshold = 300;
-            if (gray < threshold && typeof r != 'undefined' && typeof g != 'undefined' && typeof b != 'undefined') {
+            if (gray < threshold && typeof r != "undefined" && typeof g != "undefined" && typeof b != "undefined") {
                 if (gray < threshold / 3) {
-                    (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * g * 5;
-                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * g * 5, gray * g * 5, gray * g * 5, gray * g * 5);
+                    (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * r * 5;
+                    (particles.geometry.attributes.color.array as Array<number>)[i + 2] = (threshold / gray) * r * 10;
+                    // particles.geometry.setAttribute("color", new THREE.Color(1,0,0));
                 } else if (gray < threshold / 2) {
                     (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * g * 5;
-                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * g * 5, gray * g * 5, gray * g * 5, gray * g * 5);
+                    (particles.geometry.attributes.color.array as Array<number>)[i + 2] = (threshold / gray) * g * 10;
                 } else {
                     (particles.geometry.attributes.position.array as Array<number>)[i + 2] = gray * b * 5;
-                    // particles.geometry.attributes.position.setXYZW(i + 2, gray * b * 5, gray * b * 5, gray * b * 5, gray * b * 5);
-
+                    (particles.geometry.attributes.color.array as Array<number>)[i + 2] = (threshold / gray) * b * 10;
                 }
             } else {
                 (particles.geometry.attributes.position.array as Array<number>)[i + 2] = 10000;
@@ -268,9 +263,12 @@ const draw = (t?: number) => {
             count++;
         }
 
-        if (r && g && b) uniforms.size.value = (r + g + b) / 3 * 35 + 5;
+        if (r && g && b) {
+            uniforms.size.value = ((r + g + b) / 3) * 35 + 5;
+        }
 
         particles.geometry.attributes.position.needsUpdate = true;
+        particles.geometry.attributes.color.needsUpdate = true;
     }
 
     renderer.render(scene, camera);
